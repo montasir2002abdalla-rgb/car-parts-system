@@ -1,3 +1,6 @@
+// تعريف base URL للـ API (يستخدم نفس الخادم)
+const API_BASE = window.location.origin; // أو يمكن تحديد الرابط الثابت: 'https://car-parts-system-fg2l.onrender.com'
+
 let items = [];
 let sellItems = [];
 let buyItems = [];
@@ -10,7 +13,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     const username = document.getElementById('username').value;
 
     try {
-        const res = await fetch('/api/login', {
+        const res = await fetch(API_BASE + '/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -30,7 +33,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             alert(data.error || 'خطأ في تسجيل الدخول');
         }
     } catch (error) {
-        alert('فشل الاتصال بالخادم');
+        alert('فشل الاتصال بالخادم: ' + error.message);
     }
 });
 
@@ -117,7 +120,7 @@ function showSection(section) {
 async function loadItems() {
     const search = document.getElementById('searchItem')?.value || '';
     try {
-        const res = await fetch('/api/items');
+        const res = await fetch(API_BASE + '/api/items');
         const data = await res.json();
         items = data;
         const filtered = items.filter(i => i.name.includes(search));
@@ -137,7 +140,7 @@ async function loadItems() {
         `).join('');
         checkLowStockNotification();
     } catch (error) {
-        alert('فشل تحميل الأصناف');
+        alert('فشل تحميل الأصناف: ' + error.message);
     }
 }
 
@@ -177,14 +180,14 @@ document.getElementById('itemForm').addEventListener('submit', async (e) => {
     };
     try {
         if (id) {
-            await fetch(`/api/items/${id}`, {
+            await fetch(API_BASE + '/api/items/' + id, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(item)
             });
             alert('تم التحديث');
         } else {
-            await fetch('/api/items', {
+            await fetch(API_BASE + '/api/items', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(item)
@@ -198,21 +201,21 @@ document.getElementById('itemForm').addEventListener('submit', async (e) => {
         await loadReports();
         await loadLowStock();
     } catch (error) {
-        alert('حدث خطأ');
+        alert('حدث خطأ: ' + error.message);
     }
 });
 
 async function deleteItem(id) {
     if (!confirm('هل أنت متأكد؟')) return;
     try {
-        await fetch(`/api/items/${id}`, { method: 'DELETE' });
+        await fetch(API_BASE + '/api/items/' + id, { method: 'DELETE' });
         await loadItems();
         await loadDashboard();
         await loadProfit();
         await loadReports();
         await loadLowStock();
     } catch (error) {
-        alert('فشل الحذف');
+        alert('فشل الحذف: ' + error.message);
     }
 }
 
@@ -282,7 +285,7 @@ async function submitSell() {
     const total = itemsToSell.reduce((sum, i) => sum + i.total, 0);
     const paymentMethod = document.getElementById('paymentMethod').value;
     try {
-        const res = await fetch('/api/sales', {
+        const res = await fetch(API_BASE + '/api/sales', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items: itemsToSell, total, paymentMethod })
@@ -302,7 +305,7 @@ async function submitSell() {
             alert(data.error);
         }
     } catch (error) {
-        alert('فشل الاتصال');
+        alert('فشل الاتصال: ' + error.message);
     }
 }
 
@@ -371,7 +374,7 @@ async function submitBuy() {
     }
     const total = itemsToBuy.reduce((sum, i) => sum + i.total, 0);
     try {
-        const res = await fetch('/api/purchases', {
+        const res = await fetch(API_BASE + '/api/purchases', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items: itemsToBuy, total })
@@ -391,14 +394,14 @@ async function submitBuy() {
             alert(data.error);
         }
     } catch (error) {
-        alert('فشل الاتصال');
+        alert('فشل الاتصال: ' + error.message);
     }
 }
 
 // الإرساليات
 async function loadShipments() {
     try {
-        const res = await fetch('/api/shipments');
+        const res = await fetch(API_BASE + '/api/shipments');
         const data = await res.json();
         shipments = data;
         const tbody = document.getElementById('shipmentsBody');
@@ -419,7 +422,7 @@ async function loadShipments() {
             </tr>
         `).join('');
     } catch (error) {
-        alert('فشل تحميل الإرساليات');
+        alert('فشل تحميل الإرساليات: ' + error.message);
     }
 }
 
@@ -461,14 +464,14 @@ document.getElementById('shipmentForm').addEventListener('submit', async (e) => 
     };
     try {
         if (id) {
-            await fetch(`/api/shipments/${id}`, {
+            await fetch(API_BASE + '/api/shipments/' + id, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(shipment)
             });
             alert('تم التحديث');
         } else {
-            await fetch('/api/shipments', {
+            await fetch(API_BASE + '/api/shipments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(shipment)
@@ -478,17 +481,17 @@ document.getElementById('shipmentForm').addEventListener('submit', async (e) => 
         closeShipmentModal();
         await loadShipments();
     } catch (error) {
-        alert('حدث خطأ');
+        alert('حدث خطأ: ' + error.message);
     }
 });
 
 async function deleteShipment(id) {
     if (!confirm('هل أنت متأكد؟')) return;
     try {
-        await fetch(`/api/shipments/${id}`, { method: 'DELETE' });
+        await fetch(API_BASE + '/api/shipments/' + id, { method: 'DELETE' });
         await loadShipments();
     } catch (error) {
-        alert('فشل الحذف');
+        alert('فشل الحذف: ' + error.message);
     }
 }
 
@@ -508,7 +511,7 @@ function closeDetailsModal() {
 
 async function showSalesDetails() {
     try {
-        const res = await fetch('/api/sales/all');
+        const res = await fetch(API_BASE + '/api/sales/all');
         if (!res.ok) throw new Error('فشل الاتصال');
         const sales = await res.json();
         if (sales.length === 0) {
@@ -532,7 +535,7 @@ async function showSalesDetails() {
 
 async function showPurchasesDetails() {
     try {
-        const res = await fetch('/api/purchases/all');
+        const res = await fetch(API_BASE + '/api/purchases/all');
         if (!res.ok) throw new Error('فشل الاتصال');
         const purchases = await res.json();
         if (purchases.length === 0) {
@@ -552,10 +555,9 @@ async function showPurchasesDetails() {
     }
 }
 
-// تحميل لوحة التحكم
 async function loadDashboard() {
     try {
-        const res = await fetch('/api/financial-summary');
+        const res = await fetch(API_BASE + '/api/financial-summary');
         const data = await res.json();
         const stats = document.getElementById('dashboardStats');
         stats.innerHTML = `
@@ -586,7 +588,7 @@ async function loadDashboard() {
             </div>
         `;
 
-        const monthlyRes = await fetch('/api/sales/monthly');
+        const monthlyRes = await fetch(API_BASE + '/api/sales/monthly');
         const monthlyData = await monthlyRes.json();
 
         if (dashboardChart) dashboardChart.destroy();
@@ -623,10 +625,9 @@ async function loadDashboard() {
     }
 }
 
-// تحميل صفحة الأرباح
 async function loadProfit() {
     try {
-        const res = await fetch('/api/financial-summary');
+        const res = await fetch(API_BASE + '/api/financial-summary');
         const data = await res.json();
         const stats = document.getElementById('profitStats');
         stats.innerHTML = `
@@ -673,7 +674,6 @@ async function loadProfit() {
     }
 }
 
-// تحميل صفحة المخزون المنخفض
 async function loadLowStock() {
     const lowStock = items.filter(i => i.quantity <= i.minStock);
     const tbody = document.querySelector('#lowstockFullTable tbody');
@@ -687,10 +687,9 @@ async function loadLowStock() {
     `).join('');
 }
 
-// تحميل التقارير
 async function loadReports() {
     try {
-        const res = await fetch('/api/financial-summary');
+        const res = await fetch(API_BASE + '/api/financial-summary');
         const data = await res.json();
         const stats = document.getElementById('reportsStats');
         stats.innerHTML = `
@@ -725,7 +724,6 @@ async function loadReports() {
     }
 }
 
-// دوال تغيير كلمة المرور
 function showChangePasswordModal() {
     document.getElementById('changePasswordModal').style.display = 'flex';
 }
@@ -747,7 +745,7 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
     }
 
     try {
-        const res = await fetch('/api/change-password', {
+        const res = await fetch(API_BASE + '/api/change-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ oldPassword, newPassword })
@@ -760,39 +758,37 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
             alert(data.error || 'فشل تغيير كلمة المرور');
         }
     } catch (error) {
-        alert('خطأ في الاتصال');
+        alert('خطأ في الاتصال: ' + error.message);
     }
 });
+
 // دالة طباعة القسم
 function printSection(sectionId) {
     const section = document.getElementById(sectionId);
     if (!section) return;
 
-    // الحصول على عنوان القسم
     const title = section.querySelector('h2')?.innerText || 'تقرير';
 
-    // فتح نافذة جديدة
     const printWindow = window.open('', '_blank');
     printWindow.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>' + title + '</title>');
 
-    // نسخ جميع روابط CSS من الصفحة الأصلية
     const links = document.querySelectorAll('link[rel="stylesheet"]');
     links.forEach(link => {
         printWindow.document.write('<link rel="stylesheet" href="' + link.href + '" type="text/css">');
     });
 
-    // إضافة أنماط طباعة إضافية
     printWindow.document.write('<style>@media print { body { padding: 20px; } .no-print { display: none; } }</style>');
     printWindow.document.write('</head><body>');
     printWindow.document.write('<h2>' + title + '</h2>');
-    
-    // نسخ محتوى القسم مع استثناء الأزرار
+
     const content = section.cloneNode(true);
     content.querySelectorAll('.btn, .action-bar, .section-header .btn').forEach(el => el.remove());
     printWindow.document.write(content.innerHTML);
-    
+
     printWindow.document.write('</body></html>');
     printWindow.document.close();
     printWindow.print();
 }
+
+// تحميل أولي
 loadItems();
