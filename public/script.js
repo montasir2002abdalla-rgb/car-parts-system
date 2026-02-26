@@ -1,12 +1,27 @@
-// تعريف base URL للـ API (يستخدم نفس الخادم)
-const API_BASE = window.location.origin; // أو يمكن تحديد الرابط الثابت: 'https://car-parts-system-fg2l.onrender.com'
+// تحديد رابط الخادم (يعمل محلياً أو على Render)
+const API_BASE = window.location.origin;
 
+// دالة مساعدة للتعامل مع الاستجابة
+async function handleResponse(response) {
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'حدث خطأ');
+        return data;
+    } else {
+        const text = await response.text();
+        throw new Error(`استجابة غير متوقعة: ${text.substring(0, 100)}`);
+    }
+}
+
+// متغيرات عامة
 let items = [];
 let sellItems = [];
 let buyItems = [];
 let shipments = [];
 let dashboardChart, profitChart;
 
+// تسجيل الدخول
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const password = document.getElementById('password').value;
@@ -18,8 +33,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
-        const data = await res.json();
-        if (res.ok) {
+        const data = await handleResponse(res);
+        if (data.success) {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             await loadItems();
@@ -117,11 +132,12 @@ function showSection(section) {
     }
 }
 
+// تحميل الأصناف
 async function loadItems() {
     const search = document.getElementById('searchItem')?.value || '';
     try {
         const res = await fetch(API_BASE + '/api/items');
-        const data = await res.json();
+        const data = await handleResponse(res);
         items = data;
         const filtered = items.filter(i => i.name.includes(search));
         const tbody = document.getElementById('itemsBody');
@@ -180,18 +196,20 @@ document.getElementById('itemForm').addEventListener('submit', async (e) => {
     };
     try {
         if (id) {
-            await fetch(API_BASE + '/api/items/' + id, {
+            const res = await fetch(API_BASE + '/api/items/' + id, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(item)
             });
+            await handleResponse(res);
             alert('تم التحديث');
         } else {
-            await fetch(API_BASE + '/api/items', {
+            const res = await fetch(API_BASE + '/api/items', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(item)
             });
+            await handleResponse(res);
             alert('تمت الإضافة');
         }
         closeItemModal();
@@ -208,7 +226,8 @@ document.getElementById('itemForm').addEventListener('submit', async (e) => {
 async function deleteItem(id) {
     if (!confirm('هل أنت متأكد؟')) return;
     try {
-        await fetch(API_BASE + '/api/items/' + id, { method: 'DELETE' });
+        const res = await fetch(API_BASE + '/api/items/' + id, { method: 'DELETE' });
+        await handleResponse(res);
         await loadItems();
         await loadDashboard();
         await loadProfit();
@@ -290,22 +309,18 @@ async function submitSell() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items: itemsToSell, total, paymentMethod })
         });
-        const data = await res.json();
-        if (res.ok) {
-            alert('تم تسجيل البيع');
-            document.getElementById('sellItems').innerHTML = '';
-            sellItems = [];
-            calculateSellTotal();
-            await loadItems();
-            await loadDashboard();
-            await loadProfit();
-            await loadReports();
-            await loadLowStock();
-        } else {
-            alert(data.error);
-        }
+        await handleResponse(res);
+        alert('تم تسجيل البيع');
+        document.getElementById('sellItems').innerHTML = '';
+        sellItems = [];
+        calculateSellTotal();
+        await loadItems();
+        await loadDashboard();
+        await loadProfit();
+        await loadReports();
+        await loadLowStock();
     } catch (error) {
-        alert('فشل الاتصال: ' + error.message);
+        alert('فشل تسجيل البيع: ' + error.message);
     }
 }
 
@@ -379,22 +394,18 @@ async function submitBuy() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items: itemsToBuy, total })
         });
-        const data = await res.json();
-        if (res.ok) {
-            alert('تم تسجيل الشراء');
-            document.getElementById('buyItems').innerHTML = '';
-            buyItems = [];
-            calculateBuyTotal();
-            await loadItems();
-            await loadDashboard();
-            await loadProfit();
-            await loadReports();
-            await loadLowStock();
-        } else {
-            alert(data.error);
-        }
+        await handleResponse(res);
+        alert('تم تسجيل الشراء');
+        document.getElementById('buyItems').innerHTML = '';
+        buyItems = [];
+        calculateBuyTotal();
+        await loadItems();
+        await loadDashboard();
+        await loadProfit();
+        await loadReports();
+        await loadLowStock();
     } catch (error) {
-        alert('فشل الاتصال: ' + error.message);
+        alert('فشل تسجيل الشراء: ' + error.message);
     }
 }
 
@@ -402,7 +413,7 @@ async function submitBuy() {
 async function loadShipments() {
     try {
         const res = await fetch(API_BASE + '/api/shipments');
-        const data = await res.json();
+        const data = await handleResponse(res);
         shipments = data;
         const tbody = document.getElementById('shipmentsBody');
         tbody.innerHTML = shipments.map(s => `
@@ -464,18 +475,20 @@ document.getElementById('shipmentForm').addEventListener('submit', async (e) => 
     };
     try {
         if (id) {
-            await fetch(API_BASE + '/api/shipments/' + id, {
+            const res = await fetch(API_BASE + '/api/shipments/' + id, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(shipment)
             });
+            await handleResponse(res);
             alert('تم التحديث');
         } else {
-            await fetch(API_BASE + '/api/shipments', {
+            const res = await fetch(API_BASE + '/api/shipments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(shipment)
             });
+            await handleResponse(res);
             alert('تمت الإضافة');
         }
         closeShipmentModal();
@@ -488,7 +501,8 @@ document.getElementById('shipmentForm').addEventListener('submit', async (e) => 
 async function deleteShipment(id) {
     if (!confirm('هل أنت متأكد؟')) return;
     try {
-        await fetch(API_BASE + '/api/shipments/' + id, { method: 'DELETE' });
+        const res = await fetch(API_BASE + '/api/shipments/' + id, { method: 'DELETE' });
+        await handleResponse(res);
         await loadShipments();
     } catch (error) {
         alert('فشل الحذف: ' + error.message);
@@ -512,8 +526,7 @@ function closeDetailsModal() {
 async function showSalesDetails() {
     try {
         const res = await fetch(API_BASE + '/api/sales/all');
-        if (!res.ok) throw new Error('فشل الاتصال');
-        const sales = await res.json();
+        const sales = await handleResponse(res);
         if (sales.length === 0) {
             alert('لا توجد مبيعات مسجلة بعد');
             return;
@@ -536,8 +549,7 @@ async function showSalesDetails() {
 async function showPurchasesDetails() {
     try {
         const res = await fetch(API_BASE + '/api/purchases/all');
-        if (!res.ok) throw new Error('فشل الاتصال');
-        const purchases = await res.json();
+        const purchases = await handleResponse(res);
         if (purchases.length === 0) {
             alert('لا توجد مشتريات مسجلة بعد');
             return;
@@ -555,10 +567,11 @@ async function showPurchasesDetails() {
     }
 }
 
+// تحميل لوحة التحكم
 async function loadDashboard() {
     try {
         const res = await fetch(API_BASE + '/api/financial-summary');
-        const data = await res.json();
+        const data = await handleResponse(res);
         const stats = document.getElementById('dashboardStats');
         stats.innerHTML = `
             <div class="stat-card" onclick="showSalesDetails()">
@@ -589,7 +602,7 @@ async function loadDashboard() {
         `;
 
         const monthlyRes = await fetch(API_BASE + '/api/sales/monthly');
-        const monthlyData = await monthlyRes.json();
+        const monthlyData = await handleResponse(monthlyRes);
 
         if (dashboardChart) dashboardChart.destroy();
         const ctx = document.getElementById('dashboardChart').getContext('2d');
@@ -625,10 +638,11 @@ async function loadDashboard() {
     }
 }
 
+// تحميل صفحة الأرباح
 async function loadProfit() {
     try {
         const res = await fetch(API_BASE + '/api/financial-summary');
-        const data = await res.json();
+        const data = await handleResponse(res);
         const stats = document.getElementById('profitStats');
         stats.innerHTML = `
             <div class="stat-card">
@@ -674,6 +688,7 @@ async function loadProfit() {
     }
 }
 
+// تحميل صفحة المخزون المنخفض
 async function loadLowStock() {
     const lowStock = items.filter(i => i.quantity <= i.minStock);
     const tbody = document.querySelector('#lowstockFullTable tbody');
@@ -687,10 +702,11 @@ async function loadLowStock() {
     `).join('');
 }
 
+// تحميل التقارير
 async function loadReports() {
     try {
         const res = await fetch(API_BASE + '/api/financial-summary');
-        const data = await res.json();
+        const data = await handleResponse(res);
         const stats = document.getElementById('reportsStats');
         stats.innerHTML = `
             <div class="stat-card" onclick="showSalesDetails()">
@@ -724,6 +740,7 @@ async function loadReports() {
     }
 }
 
+// دوال تغيير كلمة المرور
 function showChangePasswordModal() {
     document.getElementById('changePasswordModal').style.display = 'flex';
 }
@@ -750,15 +767,11 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ oldPassword, newPassword })
         });
-        const data = await res.json();
-        if (res.ok) {
-            alert('تم تغيير كلمة المرور بنجاح');
-            closeChangePasswordModal();
-        } else {
-            alert(data.error || 'فشل تغيير كلمة المرور');
-        }
+        const data = await handleResponse(res);
+        alert(data.message);
+        closeChangePasswordModal();
     } catch (error) {
-        alert('خطأ في الاتصال: ' + error.message);
+        alert('خطأ: ' + error.message);
     }
 });
 
@@ -768,7 +781,6 @@ function printSection(sectionId) {
     if (!section) return;
 
     const title = section.querySelector('h2')?.innerText || 'تقرير';
-
     const printWindow = window.open('', '_blank');
     printWindow.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>' + title + '</title>');
 
@@ -780,11 +792,11 @@ function printSection(sectionId) {
     printWindow.document.write('<style>@media print { body { padding: 20px; } .no-print { display: none; } }</style>');
     printWindow.document.write('</head><body>');
     printWindow.document.write('<h2>' + title + '</h2>');
-
+    
     const content = section.cloneNode(true);
     content.querySelectorAll('.btn, .action-bar, .section-header .btn').forEach(el => el.remove());
     printWindow.document.write(content.innerHTML);
-
+    
     printWindow.document.write('</body></html>');
     printWindow.document.close();
     printWindow.print();
