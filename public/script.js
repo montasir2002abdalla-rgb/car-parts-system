@@ -1,7 +1,5 @@
-// تحديد رابط الخادم (يعمل محلياً أو على Render)
 const API_BASE = window.location.origin;
 
-// دالة مساعدة للتعامل مع الاستجابة
 async function handleResponse(response) {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
@@ -14,7 +12,6 @@ async function handleResponse(response) {
     }
 }
 
-// متغيرات عامة
 let items = [];
 let sellItems = [];
 let buyItems = [];
@@ -132,7 +129,6 @@ function showSection(section) {
     }
 }
 
-// تحميل الأصناف
 async function loadItems() {
     const search = document.getElementById('searchItem')?.value || '';
     try {
@@ -238,7 +234,6 @@ async function deleteItem(id) {
     }
 }
 
-// المبيعات
 function addSellItem() {
     const container = document.getElementById('sellItems');
     const index = sellItems.length;
@@ -324,7 +319,6 @@ async function submitSell() {
     }
 }
 
-// المشتريات
 function addBuyItem() {
     const container = document.getElementById('buyItems');
     const index = buyItems.length;
@@ -409,7 +403,6 @@ async function submitBuy() {
     }
 }
 
-// الإرساليات
 async function loadShipments() {
     try {
         const res = await fetch(API_BASE + '/api/shipments');
@@ -509,7 +502,6 @@ async function deleteShipment(id) {
     }
 }
 
-// دوال عرض التفاصيل
 function showDetailsModal(title, headers, rows) {
     document.getElementById('detailsModalTitle').innerText = title;
     const thead = document.getElementById('detailsTableHead');
@@ -567,7 +559,6 @@ async function showPurchasesDetails() {
     }
 }
 
-// تحميل لوحة التحكم
 async function loadDashboard() {
     try {
         const res = await fetch(API_BASE + '/api/financial-summary');
@@ -638,7 +629,6 @@ async function loadDashboard() {
     }
 }
 
-// تحميل صفحة الأرباح
 async function loadProfit() {
     try {
         const res = await fetch(API_BASE + '/api/financial-summary');
@@ -688,7 +678,6 @@ async function loadProfit() {
     }
 }
 
-// تحميل صفحة المخزون المنخفض
 async function loadLowStock() {
     const lowStock = items.filter(i => i.quantity <= i.minStock);
     const tbody = document.querySelector('#lowstockFullTable tbody');
@@ -702,7 +691,6 @@ async function loadLowStock() {
     `).join('');
 }
 
-// تحميل التقارير
 async function loadReports() {
     try {
         const res = await fetch(API_BASE + '/api/financial-summary');
@@ -740,7 +728,6 @@ async function loadReports() {
     }
 }
 
-// دوال تغيير كلمة المرور
 function showChangePasswordModal() {
     document.getElementById('changePasswordModal').style.display = 'flex';
 }
@@ -775,7 +762,6 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
     }
 });
 
-// دالة طباعة القسم
 function printSection(sectionId) {
     const section = document.getElementById(sectionId);
     if (!section) return;
@@ -802,5 +788,4 @@ function printSection(sectionId) {
     printWindow.print();
 }
 
-// تحميل أولي
 loadItems();
