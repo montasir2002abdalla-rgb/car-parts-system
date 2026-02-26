@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>نظام عاصم ود كمون - إدارة قطع الغيار</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <div class="login-logo">
+                <i class="fas fa-car-side"></i>
+                <h1>عاصم ود كمون</h1>
+                <p>لتجارة قطع غيار السيارات</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> اسم المستخدم</label>
+                    <input type="text" id="username" value="عاصم عبدالله ود كمون" readonly>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> كلمة المرور</label>
+                    <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">دخول</button>
+            </form>
+            <div class="login-footer">
+                <p>تم التطوير بواسطة مهندس منتصر عبدالله</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainApp" style="display: none;">
+        <div class="notification-bar" id="notificationBar" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="notificationMessage">تنبيه: هناك أصناف منخفضة المخزون</span>
+            <button onclick="hideNotification()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-car-side"></i>
+                <h3>عاصم ود كمون</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" onclick="showSection('dashboard')">
+                    <i class="fas fa-home"></i>
+                    <span>الرئيسية</span>
+                </li>
+                <li onclick="showSection('items')">
+                    <i class="fas fa-boxes"></i>
+                    <span>الأصناف</span>
+                </li>
+                <li onclick="showSection('sell')">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>بيع</span>
+                </li>
+                <li onclick="showSection('buy')">
+                    <i class="fas fa-truck"></i>
+                    <span>شراء</span>
+                </li>
+                <li onclick="showSection('profit')">
+                    <i class="fas fa-chart-line"></i>
+                    <span>الأرباح</span>
+                </li>
+                <li onclick="showSection('lowstock')">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>المخزون المنخفض</span>
+                </li>
+                <li onclick="showSection('shipments')">
+                    <i class="fas fa-shipping-fast"></i>
+                    <span>الإرساليات</span>
+                </li>
+                <li onclick="showSection('reports')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>التقارير</span>
+                </li>
+                <li onclick="showChangePasswordModal()">
+                    <i class="fas fa-key"></i>
+                    <span>تغيير كلمة المرور</span>
+                </li>
+                <li onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>خروج</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <div class="section-header" id="sectionHeader">
+                <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-right"></i> رجوع</button>
+                <h2 id="sectionTitle">الرئيسية</h2>
+            </div>
+
+            <!-- الصفحة الرئيسية (بدون زر طباعة) -->
+            <div id="dashboardSection" class="section active">
+                <h2>الرئيسية</h2>
+                <div class="stats-grid" id="dashboardStats"></div>
+                <div class="chart-container">
+                    <canvas id="dashboardChart"></canvas>
+                </div>
+                <div class="report-section">
+                    <h3>المخزون المنخفض</h3>
+                    <div class="table-responsive">
+                        <table id="dashboardLowStockTable">
+                            <thead>
+                                <tr><th>الاسم</th><th>الكمية</th><th>أقل كمية للإنذار</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- إدارة الأصناف -->
+            <div id="itemsSection" class="section">
+                <div class="section-header">
+                    <h2>إدارة الأصناف</h2>
+                    <button class="btn btn-secondary" onclick="printSection('itemsSection')"><i class="fas fa-print"></i> طباعة</button>
+                </div>
+                <div class="action-bar">
+                    <button class="btn btn-primary" onclick="showAddItemModal()"><i class="fas fa-plus"></i> إضافة صنف</button>
+                    <input type="text" id="searchItem" placeholder="بحث بالاسم..." onkeyup="loadItems()">
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>الاسم</th><th>الكمية</th><th>سعر البيع</th><th>سعر الشراء</th><th>أقل كمية للإنذار</th><th>إجراءات</th></tr>
+                        </thead>
+                        <tbody id="itemsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- بيع -->
+            <div id="sellSection" class="section">
+                <div class="section-header">
+                    <h2>تسجيل عملية بيع</h2>
+                    <button class="btn btn-secondary" onclick="printSection('sellSection')"><i class="fas fa-print"></i> طباعة</button>
+                </div>
+                <div id="sellItems"></div>
+                <button class="btn btn-secondary" onclick="addSellItem()"><i class="fas fa-plus"></i> إضافة صنف</button>
+                <div class="form-group">
+                    <label><i class="fas fa-credit-card"></i> طريقة الدفع</label>
+                    <select id="paymentMethod">
+                        <option value="bank">بنكك</option>
+                        <option value="cash">كاش</option>
+                        <option value="fawry">فوري</option>
+                    </select>
+                </div>
+                <div class="total">الإجمالي: <span id="sellTotal">0</span> ج.س</div>
+                <button class="btn btn-success" onclick="submitSell()"><i class="fas fa-check"></i> تأكيد البيع</button>
+            </div>
+
+            <!-- شراء -->
+            <div id="buySection" class="section">
+                <div class="section-header">
+                    <h2>تسجيل عملية شراء</h2>
+                    <button class="btn btn-secondary" onclick="printSection('buySection')"><i class="fas fa-print"></i> طباعة</button>
+                </div>
+                <div id="buyItems"></div>
+                <button class="btn btn-secondary" onclick="addBuyItem()"><i class="fas fa-plus"></i> إضافة صنف</button>
+                <div class="total">الإجمالي: <span id="buyTotal">0</span> ج.س</div>
+                <button class="btn btn-success" onclick="submitBuy()"><i class="fas fa-check"></i> تأكيد الشراء</button>
+            </div>
+
+            <!-- صفحة الأرباح -->
+            <div id="profitSection" class="section">
+                <div class="section-header">
+                    <h2>الأرباح</h2>
+                    <button class="btn btn-secondary" onclick="printSection('profitSection')"><i class="fas fa-print"></i> طباعة</button>
+                </div>
+                <div class="stats-grid" id="profitStats"></div>
+                <div class="chart-container">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+
+            <!-- صفحة المخزون المنخفض -->
+            <div id="lowstockSection" class="section">
+                <div class="section-header">
+                    <h2>المخزون المنخفض</h2>
+                    <button class="btn btn-secondary" onclick="printSection('lowstockSection')"><i class="fas fa-print"></i> طباعة</button>
+                </div>
+                <div class="report-section">
+                    <div class="table-responsive">
+                        <table id="lowstockFullTable">
+                            <thead>
+                                <tr><th>الاسم</th><th>الكمية</th><th>أقل كمية للإنذار</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحة الإرساليات -->
+            <div id="shipmentsSection" class="section">
+                <div class="section-header">
+                    <h2>الإرساليات</h2>
+                    <button class="btn btn-secondary" onclick="printSection('shipmentsSection')"><i class="fas fa-print"></i> طباعة</button>
+                </div>
+                <button class="btn btn-primary" onclick="showAddShipmentModal()"><i class="fas fa-plus"></i> إضافة إرسالية</button>
+                <div class="table-responsive">
+                    <table id="shipmentsTable">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>الاسم</th>
+                                <th>المنطقة</th>
+                                <th>القطعة</th>
+                                <th>سعر القطعة</th>
+                                <th>أتعابي</th>
+                                <th>الإجمالي</th>
+                                <th>الحالة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shipmentsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- صفحة التقارير -->
+            <div id="reportsSection" class="section">
+                <div class="section-header">
+                    <h2>التقارير المالية</h2>
+                    <button class="btn btn-secondary" onclick="printSection('reportsSection')"><i class="fas fa-print"></i> طباعة</button>
+                </div>
+                <div class="stats-grid" id="reportsStats"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal لعرض التفاصيل -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDetailsModal()">&times;</span>
+            <h3 id="detailsModalTitle">تفاصيل</h3>
+            <div class="table-responsive">
+                <table id="detailsTable">
+                    <thead id="detailsTableHead"></thead>
+                    <tbody id="detailsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal إضافة/تعديل صنف -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeItemModal()">&times;</span>
+            <h3 id="modalTitle">إضافة صنف</h3>
+            <form id="itemForm">
+                <input type="hidden" id="itemId">
+                <div class="form-group">
+                    <label>الاسم</label>
+                    <input type="text" id="itemName" required>
+                </div>
+                <div class="form-group">
+                    <label>الكمية</label>
+                    <input type="number" id="itemQuantity" required>
+                </div>
+                <div class="form-group">
+                    <label>سعر البيع</label>
+                    <input type="number" step="0.01" id="itemPrice" required>
+                </div>
+                <div class="form-group">
+                    <label>سعر الشراء (التكلفة)</label>
+                    <input type="number" step="0.01" id="itemCost" value="0">
+                </div>
+                <div class="form-group">
+                    <label>أقل كمية للإنذار</label>
+                    <input type="number" id="itemMinStock" value="0">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal إضافة/تعديل إرسالية -->
+    <div id="shipmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeShipmentModal()">&times;</span>
+            <h3 id="shipmentModalTitle">إضافة إرسالية</h3>
+            <form id="shipmentForm">
+                <input type="hidden" id="shipmentId">
+                <div class="form-group">
+                    <label>اسم الشخص</label>
+                    <input type="text" id="shipmentPersonName" required>
+                </div>
+                <div class="form-group">
+                    <label>المنطقة</label>
+                    <input type="text" id="shipmentRegion" required>
+                </div>
+                <div class="form-group">
+                    <label>وصف القطعة</label>
+                    <input type="text" id="shipmentItemDescription" required>
+                </div>
+                <div class="form-group">
+                    <label>سعر القطعة</label>
+                    <input type="number" step="0.01" id="shipmentItemPrice" value="0">
+                </div>
+                <div class="form-group">
+                    <label>أتعابي</label>
+                    <input type="number" step="0.01" id="shipmentMyFee" value="0">
+                </div>
+                <div class="form-group">
+                    <label>الحالة</label>
+                    <select id="shipmentStatus">
+                        <option value="pending">قيد التنفيذ</option>
+                        <option value="completed">مكتملة</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal تغيير كلمة المرور -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeChangePasswordModal()">&times;</span>
+            <h3>تغيير كلمة المرور</h3>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label>كلمة المرور القديمة</label>
+                    <input type="password" id="oldPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور الجديدة</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>تأكيد كلمة المرور الجديدة</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-key"></i> تغيير</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
